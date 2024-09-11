@@ -1,0 +1,9 @@
+[package]
+name = "ClassificationServer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rocket = "0.5.0-rc.2"
+rocket-multipart-form-data = "0.10.7"
+tokio = { version = "1.28.0", features = ["full"] }
