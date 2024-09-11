@@ -1,73 +1,63 @@
-# Classify
+# Classify Web Server
 
-This is a command-line tool for classifying sketch images using a pre-trained Vision Transformer (ViT) model.
+This is a Rust-based web server that provides a user interface for the Classify CLI tool. It allows users to upload sketches through a web form and get classification results.
 
 ## Features
 
-- Uses a ViT model fine-tuned for sketch classification
-- Provides top 5 predictions with confidence scores
-- Colorized output for better readability
+- Web interface for sketch upload and classification
+- Integration with the Sketch Classifier CLI tool
+- Built with Rocket, a fast and secure Rust web framework
+- Supports multiple file formats for sketch uploads
+
+## Prerequisites
+
+- Rust (latest stable version)
+- Cargo (Rust's package manager)
+- Sketch Classifier CLI tool installed and accessible in the system PATH
 
 ## Installation
 
-1. Clone this repository:
+1. Clone the repository:
 
    ```
-   git clone https://github.com/yourusername/sketch-classifier-cli.git
-   cd sketch-classifier-cli
+   git clone https://github.com/yourusername/classify_web_server.git
+   cd sketch-classifier-webserver
    ```
 
-2. Install the required dependencies:
-
+2. Build the project:
    ```
-   pip install -r requirements.txt
-   ```
-
-3. Install the tool:
-   ```
-   pip install .
+   cargo build --release
    ```
 
 ## Usage
 
-After installation, you can use the tool from anywhere in your system by running:
+1. Start the server:
 
-```
-classify path/to/your/sketch.jpg
-```
+   ```
+   cargo run --release
+   ```
 
-This will classify the sketch image and output the results, including:
+2. Open a web browser and navigate to `http://localhost:8000`
 
-- The top prediction with its class ID
-- A table of the top 5 predictions with their confidence scores
+3. Use the web form to upload a sketch image and submit for classification
 
-## Example
+4. View the classification results displayed on the web page
 
-```
-$ classify dog_sketch.jpg
+## Configuration
 
-==================================================
-🖼️  Image: dog_sketch.jpg
-🏷️  Prediction: dog
-🔢  Id: 66
-==================================================
+- The server runs on `localhost:8000` by default. To change this, modify the `Rocket.toml` file or use environment variables as specified in the Rocket documentation.
 
-Top 5 Predictions:
-Rank  Label               ID    Confidence
-------------------------------------------
-1.    dog                 66    85.32%
-2.    cat                 48    10.45%
-3.    horse               106   2.67%
-4.    cow                 59    1.12%
-5.    sheep               185   0.44%
+## API Endpoints
 
-==================================================
-```
+- `GET /`: Serves the main page with the upload form
+- `POST /classify`: Handles sketch upload and classification
 
-## Requirements
+## Dependencies
 
-- Python 3.7+
-- PyTorch
-- Transformers
-- Pillow
-- termcolor
+- Rocket: Web framework for Rust
+- rocket_multipart_form_data: For handling file uploads
+- tokio: Asynchronous runtime for Rust
+
+## Acknowledgements
+
+- Built with [Rocket](https://rocket.rs/), a web framework for Rust
