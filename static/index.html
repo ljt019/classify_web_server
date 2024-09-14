@@ -2,42 +2,257 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <title>Canvas Drawing</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Image Classifier</title>
     <style>
+      /* Reset some default styles */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
       body {
         font-family: Arial, sans-serif;
-        max-width: 600px;
-        margin: 0 auto;
+        max-width: 100%;
+        margin: 0;
         padding: 20px;
+        color: white;
+        background: #121212; /* Dark background for better contrast */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
-      form {
-        background-color: #f0f0f0;
-        padding: 20px;
-        border-radius: 8px;
+
+      h1 {
+        margin-bottom: 20px;
+        font-size: 2em;
+        color: #4caf50;
       }
-      input[type="file"] {
-        margin-bottom: 10px;
+
+      canvas {
+        border: 2px solid #4caf50;
+        touch-action: none; /* Prevent touch scrolling on mobile */
+        background: white; /* Ensure the canvas has a white background */
       }
-      input[type="submit"] {
+
+      #controls {
+        margin-top: 15px;
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+      }
+
+      button {
+        flex: 1;
+        padding: 15px;
+        font-size: 1em;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      #classify-btn {
         background-color: #4caf50;
         color: white;
-        padding: 10px 15px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
       }
-      input[type="submit"]:hover {
+
+      #classify-btn:disabled {
+        background-color: #a5d6a7;
+        cursor: not-allowed;
+      }
+
+      #classify-btn:hover:not(:disabled) {
         background-color: #45a049;
+      }
+
+      #clear-btn {
+        background-color: #f44336;
+        color: white;
+      }
+
+      #clear-btn:hover {
+        background-color: #e53935;
+      }
+
+      #loading-message {
+        margin-top: 15px;
+        font-weight: bold;
+        color: #e0e0e0;
+        text-align: center;
+      }
+
+      /* Responsive Adjustments */
+      @media (min-width: 600px) {
+        canvas {
+          /* No need to set width and height here */
+        }
+
+        button {
+          padding: 10px 20px;
+          font-size: 1.1em;
+        }
+
+        h1 {
+          font-size: 2.5em;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Image Classifier</h1>
-    <form action="/classify" method="post" enctype="multipart/form-data">
-      <input type="file" name="image" accept="image/*" required />
-      <br />
-      <input type="submit" value="Classify Image" />
-    </form>
+    <h1>Classify Your Drawing</h1>
+    <canvas id="drawing-canvas" width="400" height="400"></canvas>
+    <div id="controls">
+      <button id="classify-btn">Classify Drawing</button>
+      <button id="clear-btn">Clear Canvas</button>
+    </div>
+    <div id="loading-message"></div>
+    <script>
+      const canvas = document.getElementById("drawing-canvas");
+      const ctx = canvas.getContext("2d");
+      let drawing = false;
+
+      // Set up drawing parameters
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "black";
+
+      /**
+       * Function to get the position of the mouse or touch event relative to the canvas
+       * @param {Event} evt - The mouse or touch event
+       * @returns {Object} - An object containing the x and y coordinates
+       */
+      function getPosition(evt) {
+        const rect = canvas.getBoundingClientRect();
+        const type = evt.type.includes("touch") ? "touch" : "mouse";
+        if (type === "mouse") {
+          return {
+            x: evt.clientX - rect.left,
+            y: evt.clientY - rect.top,
+          };
+        } else {
+          return {
+            x: evt.touches[0].clientX - rect.left,
+            y: evt.touches[0].clientY - rect.top,
+          };
+        }
+      }
+
+      /**
+       * Function to clear the canvas and fill it with white
+       */
+      function clearCanvas() {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Initialize the canvas with a white background when the page loads
+      window.onload = () => {
+        clearCanvas();
+      };
+
+      // Mouse events
+      canvas.addEventListener("mousedown", (e) => {
+        drawing = true;
+        const pos = getPosition(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      });
+
+      canvas.addEventListener("mousemove", (e) => {
+        if (drawing) {
+          const pos = getPosition(e);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+        }
+      });
+
+      canvas.addEventListener("mouseup", () => {
+        drawing = false;
+      });
+
+      canvas.addEventListener("mouseleave", () => {
+        drawing = false;
+      });
+
+      // Touch events
+      canvas.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        drawing = true;
+        const pos = getPosition(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      });
+
+      canvas.addEventListener("touchmove", (e) => {
+        e.preventDefault();
+        if (drawing) {
+          const pos = getPosition(e);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+        }
+      });
+
+      canvas.addEventListener("touchend", () => {
+        drawing = false;
+      });
+
+      // Handle the "Clear Canvas" button click
+      document.getElementById("clear-btn").addEventListener("click", () => {
+        clearCanvas();
+      });
+
+      // Handle the "Classify Drawing" button click
+      document.getElementById("classify-btn").addEventListener("click", () => {
+        const classifyBtn = document.getElementById("classify-btn");
+        const loadingMessage = document.getElementById("loading-message");
+
+        // Disable the button and change its text
+        classifyBtn.disabled = true;
+        classifyBtn.textContent = "Processing...";
+
+        // Show loading message
+        loadingMessage.textContent =
+          "Your drawing is being classified. Please wait...";
+
+        // Get the image data from the canvas using toBlob
+        canvas.toBlob((blob) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64data = reader.result.split(",")[1];
+
+            // Send the image data to the backend
+            fetch("/classify", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ image: base64data }),
+            })
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error("Server error");
+                }
+                return response.text();
+              })
+              .then((data) => {
+                // Display the result to the user
+                document.body.innerHTML = data;
+              })
+              .catch((error) => {
+                console.error("Error:", error);
+                // Show error message
+                loadingMessage.textContent =
+                  "An error occurred during classification. Please try again.";
+                // Re-enable the button and reset its text
+                classifyBtn.disabled = false;
+                classifyBtn.textContent = "Classify Drawing";
+              });
+          };
+          reader.readAsDataURL(blob);
+        }, "image/png");
+      });
+    </script>
   </body>
 </html>
